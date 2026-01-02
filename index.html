@@ -133,13 +133,14 @@
         }
         .plate-left { left: -100px; } .plate-right { right: -100px; }
         .served-slice { width: 50px; height: 40px; background: #ff7675; border-radius: 5px; transform: rotate(45deg); display: none; }
+        
         #hungry-photo {
             position: absolute; top: 15%; left: 50%; transform: translateX(-50%) scale(0);
             width: 150px; height: 200px; background: white; padding: 5px; border-radius: 10px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.2); transition: transform 0.5s; z-index: 58;
             display: flex; flex-direction: column; align-items: center;
         }
-        #hungry-photo img { width: 100%; height: 80%; object-fit: cover; border-radius: 5px; }
+        #hungry-photo img { width: 100%; height: 80%; object-fit: cover; border-radius: 5px; transition: 0.3s; }
 
         /* CAT & GIFT SCENE */
         #cat-wrapper {
@@ -230,7 +231,7 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
         #draw-canvas {
-            border: 2px solid #333; background: white; /* Base white */
+            border: 2px solid #333; background: white;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             touch-action: none;
         }
@@ -299,7 +300,8 @@
         <div class="plate plate-right" id="plate4" style="top: 55%;"><div class="served-slice"></div></div>
 
         <div id="hungry-photo">
-            <img src="mypic.png" alt="Me">
+            <!-- REPLACE THIS WITH ANGRY PHOTO -->
+            <img id="hp-img" src="myangry" alt="Me">
             <div id="hungry-text">You didn't give me cake! 🥺</div>
         </div>
 
@@ -340,7 +342,7 @@
                         <div class="box-item" onclick="blastConfetti(event)">🎉</div>
                         <!-- Bottom Left: Camera -->
                         <div class="box-item" onclick="openCamera(event)">📷</div>
-                        <!-- Bottom Right: Drawing (Now Palette) -->
+                        <!-- Bottom Right: Drawing (Was Decor) -->
                         <div class="box-item" onclick="openDrawing(event)">🎨</div>
                     </div>
 
@@ -578,8 +580,14 @@
 
         function feedPhoto() {
             photoFed=true; cakeSlice.style.display='none';
-            document.querySelector('#hungry-photo img').style.border = "5px solid #00b894";
+            
+            // --- CHANGE PHOTO TO HAPPY ---
+            // REPLACE THIS URL WITH YOUR HAPPY PHOTO
+            document.getElementById('hp-img').src = "myhappy.png"; 
+            
+            document.getElementById('hungry-text').innerText = "Yum! Thank you! 😋";
             document.getElementById('task-text').innerText = "";
+            
             setTimeout(() => {
                 hungryPhoto.style.transform = "translateX(-50%) scale(0)";
                 document.getElementById('cake-wrapper').style.transform = "translateX(-150vw)";
@@ -601,7 +609,7 @@
         };
         window.choiceYes = () => {
             document.getElementById('dialogue').style.display='none';
-            document.getElementById('task-text').innerText = "Click to open the gift! 🎁";
+            document.getElementById('task-text').innerText = "Click to open the gift 🎁";
             document.getElementById('the-cat').style.opacity=0;
             giftAnchor.style.position="fixed"; giftAnchor.style.left="50%"; giftAnchor.style.top="50%";
             giftAnchor.style.marginLeft="-80px"; giftAnchor.style.marginTop="-80px";
@@ -735,7 +743,7 @@
             const data = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.href = data;
-            link.download = 'Arya_Masterpiece.png';
+            link.download = 'Arya_Art.png';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -805,7 +813,7 @@
 
             // Date
             ctx.font = `${fontSize/2}px 'Handlee', sans-serif`;
-            ctx.fillText(new Date().toDateString() + " • Celebration mode 🎉", w/2, bannerY + (bannerHeight*0.8));
+            ctx.fillText(new Date().toDateString() + " • Celebration Mode 🎉", w/2, bannerY + (bannerHeight*0.8));
 
             // 5. Draw Digital Confetti
             for(let i=0; i<30; i++) {
@@ -854,4 +862,4 @@
 
     </script>
 </body>
-</html>
+    </html>
