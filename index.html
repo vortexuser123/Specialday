@@ -264,7 +264,11 @@
 
         /* Full Screen Confetti Canvas */
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 400; }
-
+/* Animation for the flip hint */
+@keyframes slideHint { 
+    0%, 100% { transform: translateX(0); } 
+    50% { transform: translateX(5px); } 
+}
     </style>
 </head>
 <body>
@@ -846,20 +850,35 @@
         };
 
         // Book Logic
-        window.showBook = () => {
-            document.getElementById('letter-view').style.display='none';
-            const book = document.getElementById('book');
-            document.getElementById('book-overlay').style.display='flex';
-            memories.forEach((m,i)=>{
-                let p = document.createElement('div'); p.className='page'; p.style.zIndex=memories.length-i;
-                p.innerHTML=`<img src="${m.img}"><p style="margin-top:20px; font-family:'Handlee'">${m.text}</p>`;
-                p.onclick=function(){this.style.transform="rotateY(-150deg)"};
-                book.appendChild(p);
-            });
-            let last = document.createElement('div'); last.className='page'; last.innerHTML="<h1>End ❤️</h1>";
-            book.appendChild(last);
-        };
-
+        // Book Logic
+window.showBook = () => {
+    document.getElementById('letter-view').style.display = 'none';
+    const book = document.getElementById('book');
+    document.getElementById('book-overlay').style.display = 'flex';
+    
+    memories.forEach((m, i) => {
+        let p = document.createElement('div'); 
+        p.className = 'page'; 
+        p.style.zIndex = memories.length - i;
+        
+        // UPDATED HTML HERE: Added the div with the arrow
+        p.innerHTML = `
+            <img src="${m.img}">
+            <p style="margin-top:20px; font-family:'Handlee'">${m.text}</p>
+            <div style="position: absolute; bottom: 15px; right: 15px; font-size: 0.8rem; color: #888; display: flex; align-items: center; gap: 5px; animation: slideHint 1s infinite alternate;">
+                Tap to Flip <span>➡️</span>
+            </div>
+        `;
+        
+        p.onclick = function() { this.style.transform = "rotateY(-150deg)" };
+        book.appendChild(p);
+    });
+    
+    let last = document.createElement('div'); 
+    last.className = 'page'; 
+    last.innerHTML = "<h1>End ❤️</h1>";
+    book.appendChild(last);
+};
     </script>
 </body>
     </html>
