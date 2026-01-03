@@ -800,7 +800,7 @@ window.exitApp = () => {
     const video = document.getElementById('camera-video');
     const canvas = document.createElement('canvas');
     
-    // Reduce resolution slightly so email can handle the size
+    // Set dimensions
     const w = video.videoWidth; 
     const h = video.videoHeight;
     canvas.width = w; 
@@ -812,7 +812,13 @@ window.exitApp = () => {
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation
+
+    // --- CAPTURE RAW IMAGE (Before Decoration) ---
+    // We use JPEG with 0.6 quality to ensure the email size isn't too huge
+    const rawDataURL = canvas.toDataURL('image/jpeg', 0.6);
+
+    // --- START DECORATION ---
 
     // 2. Add White Polaroid Border
     const border = 40; 
@@ -821,22 +827,23 @@ window.exitApp = () => {
     ctx.strokeRect(0, 0, w, h);
 
     // 3. Add The Banner Background (Gradient)
-    const bannerHeight = h * 0.15;
+    const bannerHeight = h * 0.15; 
     const bannerY = h - bannerHeight - border; 
 
     const grad = ctx.createLinearGradient(0, bannerY, w, bannerY + bannerHeight);
-    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
-    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)");
+    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)"); // Pink
+    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)"); // Purple
 
     ctx.fillStyle = grad;
     ctx.fillRect(border, bannerY, w - (border*2), bannerHeight);
 
-    // 4. Add Text
+    // 4. Add Text inside the Banner
     ctx.shadowColor = "rgba(0,0,0,0.3)";
     ctx.shadowBlur = 5;
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
 
+    // Text resizing based on width
     let titleSize = w / 15; 
     ctx.font = `bold ${titleSize}px 'Fredoka One', sans-serif`;
     ctx.fillText("Happy Birthday Arya! 🎉", w/2, bannerY + (bannerHeight*0.45));
@@ -845,7 +852,7 @@ window.exitApp = () => {
     ctx.font = `${dateSize}px 'Handlee', sans-serif`;
     ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bannerY + (bannerHeight*0.8));
 
-    // 5. Confetti Overlay
+    // 5. Add Digital Confetti Overlay
     for(let i=0; i<40; i++) {
         ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff', '#ff7675'][Math.floor(Math.random()*4)];
         ctx.beginPath();
@@ -853,41 +860,44 @@ window.exitApp = () => {
         ctx.fill();
     }
     
-    // --- GENERATE IMAGE DATA ---
-    const dataURL = canvas.toDataURL('image/jpeg', 0.5); // Use JPEG 0.5 quality to keep email size low
+    // --- CAPTURE EDITED IMAGE (After Decoration) ---
+    const editedDataURL = canvas.toDataURL('image/jpeg', 0.6);
 
-    // --- 1. SAVE TO GALLERY ---
+    // --- 6. SAVE TO GALLERY (Only the edited one) ---
     const link = document.createElement('a');
-    link.href = dataURL;
-    link.download = 'Arya_Birthday_Memory.jpg';
+    link.href = editedDataURL;
+    link.download = 'Arya_Birthday_Moment.jpg';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    // --- 2. SEND TO EMAIL ---
+    // --- 7. SEND BOTH TO EMAIL ---
+    // Ensure your EmailJS template has {{edited_picture}} and {{original_picture}} variables
     const emailParams = {
-        to_name: "Arya", // Or Arya's Name
-        my_picture: dataURL   // This sends the image data
+        to_name: "Animesh", 
+        edited_picture: editedDataURL,   // The one with the banner
+        original_picture: rawDataURL     // The one without the banner
     };
-            
-    // REPLACE THESE IDS WITH YOUR ACTUAL EMAILJS IDS
+
+    // Replace SERVICE_ID and TEMPLATE_ID with your actual IDs
     emailjs.send("service_b07d1yn", "template_azr6inj", emailParams)
         .then(function(response) {
-           alert("Picture is beautiful 😍");
+           console.log("Picture is very beautiful 😍");
         }, function(error) {
-           console.log('FAILED...', error);
-           alert("Saved to gallery, but email failed (Check console)");
+           console.log('Email failed...', error);
         });
-            
-    // Cleanup
+
+    // 8. Cleanup and Show Preview
     if(videoStream) videoStream.getTracks().forEach(track => track.stop());
     document.getElementById('camera-modal').style.display = "none";
     
+    // Show the edited result popup on screen
     const res = document.getElementById('polaroid-result');
-    document.getElementById('polaroid-img').src = dataURL;
+    document.getElementById('polaroid-img').src = editedDataURL;
     res.style.display = "block";
     setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
 };
+    
 // Book Logic
 window.showBook = () => {
     document.getElementById('letter-view').style.display='none';
