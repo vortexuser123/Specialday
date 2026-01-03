@@ -427,6 +427,22 @@
     </div>
 
     <script>
+        // --- ENDING FUNCTIONS ---
+
+window.restartApp = () => {
+    location.reload(); // Refreshes the page
+};
+
+window.exitApp = () => {
+    // Try to close the window
+    window.close(); 
+    
+    // If browser blocks it (most likely on mobile), redirect to Google
+    // This acts as "leaving" the site
+    setTimeout(() => {
+        window.location.href = "https://www.google.com";
+    }, 100);
+};
         const textToType = "Today is your special day! Let's celebrate... ✨";
         // --- ADD PHOTOS HERE ---
         const memories = [
@@ -872,35 +888,44 @@
     res.style.display = "block";
     setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
 };
-
-        // Book Logic
-        // Book Logic
+// Book Logic
 window.showBook = () => {
-    document.getElementById('letter-view').style.display = 'none';
+    document.getElementById('letter-view').style.display='none';
     const book = document.getElementById('book');
-    document.getElementById('book-overlay').style.display = 'flex';
+    document.getElementById('book-overlay').style.display='flex';
     
-    memories.forEach((m, i) => {
-        let p = document.createElement('div'); 
-        p.className = 'page'; 
-        p.style.zIndex = memories.length - i;
-        
-        // UPDATED HTML HERE: Added the div with the arrow
-        p.innerHTML = `
+    memories.forEach((m,i)=>{
+        let p = document.createElement('div'); p.className='page'; p.style.zIndex=memories.length-i;
+        p.innerHTML=`
             <img src="${m.img}">
             <p style="margin-top:20px; font-family:'Handlee'">${m.text}</p>
             <div style="position: absolute; bottom: 15px; right: 15px; font-size: 0.8rem; color: #888; display: flex; align-items: center; gap: 5px; animation: slideHint 1s infinite alternate;">
                 Tap to Flip <span>➡️</span>
             </div>
         `;
-        
-        p.onclick = function() { this.style.transform = "rotateY(-150deg)" };
+        p.onclick=function(){this.style.transform="rotateY(-150deg)"};
         book.appendChild(p);
     });
-    
+
+    // --- LAST PAGE MODIFICATION ---
     let last = document.createElement('div'); 
-    last.className = 'page'; 
-    last.innerHTML = "<h1>End ❤️</h1>";
+    last.className='page'; 
+    
+    // Updated HTML for the last page with Buttons
+    last.innerHTML = `
+        <h1 style="color: #ff6b6b; font-size: 2.5rem; margin-bottom: 30px;">The End ❤️</h1>
+        <p style="font-family: 'Handlee'; font-size: 1.2rem; margin-bottom: 40px;">🤧 Hope you liked it! 🥹</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 15px; width: 80%;">
+            <button onclick="restartApp()" style="padding: 15px; background: #55efc4; color: #006266; border: none; border-radius: 50px; font-family: 'Fredoka One'; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                Restart 😁
+            </button>
+            
+            <button onclick="exitApp()" style="padding: 15px; background: #ff7675; color: white; border: none; border-radius: 50px; font-family: 'Fredoka One'; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                Exit 😭
+            </button>
+        </div>
+    `;
     book.appendChild(last);
 };
     </script>
