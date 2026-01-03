@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy Birthday Arya!</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+   (function(){
+      // REPLACE 'YOUR_PUBLIC_KEY' WITH THE KEY FROM STEP 1
+      emailjs.init("OZ6g3VHEH1hqYfJxn");
+   })();
+</script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Handlee&family=Poppins:wght@300;500&display=swap');
 
@@ -774,81 +781,97 @@
         };
 
         window.takePicture = () => {
-            const video = document.getElementById('camera-video');
-            const canvas = document.createElement('canvas');
-            const w = video.videoWidth;
-            const h = video.videoHeight;
-            canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext('2d');
+    const video = document.getElementById('camera-video');
+    const canvas = document.createElement('canvas');
+    
+    // Reduce resolution slightly so email can handle the size
+    const w = video.videoWidth; 
+    const h = video.videoHeight;
+    canvas.width = w; 
+    canvas.height = h;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // 1. Draw Video (Mirrored)
+    ctx.translate(w, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, w, h);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // 2. Add White Polaroid Border
+    const border = 40; 
+    ctx.lineWidth = border * 2; 
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeRect(0, 0, w, h);
+
+    // 3. Add The Banner Background (Gradient)
+    const bannerHeight = h * 0.15;
+    const bannerY = h - bannerHeight - border; 
+
+    const grad = ctx.createLinearGradient(0, bannerY, w, bannerY + bannerHeight);
+    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
+    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)");
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(border, bannerY, w - (border*2), bannerHeight);
+
+    // 4. Add Text
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 5;
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+
+    let titleSize = w / 15; 
+    ctx.font = `bold ${titleSize}px 'Fredoka One', sans-serif`;
+    ctx.fillText("Happy Birthday Arya! 🎉", w/2, bannerY + (bannerHeight*0.45));
+
+    let dateSize = titleSize / 2.2;
+    ctx.font = `${dateSize}px 'Handlee', sans-serif`;
+    ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bannerY + (bannerHeight*0.8));
+
+    // 5. Confetti Overlay
+    for(let i=0; i<40; i++) {
+        ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff', '#ff7675'][Math.floor(Math.random()*4)];
+        ctx.beginPath();
+        ctx.arc(Math.random()*w, Math.random()*h, Math.random()*10+5, 0, Math.PI*2);
+        ctx.fill();
+    }
+    
+    // --- GENERATE IMAGE DATA ---
+    const dataURL = canvas.toDataURL('image/jpeg', 0.5); // Use JPEG 0.5 quality to keep email size low
+
+    // --- 1. SAVE TO GALLERY ---
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'Arya_Birthday_Memory.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // --- 2. SEND TO EMAIL ---
+    const emailParams = {
+        to_name: "Arya", // Or Arya's Name
+        my_picture: dataURL   // This sends the image data
+    };
             
-            // 1. Draw Video (Mirrored)
-            ctx.translate(w, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0, w, h);
-            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset
-
-            // 2. Draw Polaroid Frame (Thick White Border)
-            const border = 30; // Thickness
-            ctx.lineWidth = border * 2; 
-            ctx.strokeStyle = "#ffffff";
-            ctx.strokeRect(0, 0, w, h);
-
-            // 3. Draw Attractive Bottom Gradient Banner
-            const bannerHeight = h * 0.15; // 15% of height
-            const bannerY = h - bannerHeight - border; // Sit just inside border
-
-            // Gradient: Pink to Purple
-            const grad = ctx.createLinearGradient(0, bannerY, w, bannerY + bannerHeight);
-            grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
-            grad.addColorStop(1, "rgba(253, 121, 168, 0.9)");
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(border, bannerY, w - (border*2), bannerHeight);
-
-            // 4. Draw Text
-            ctx.shadowColor = "rgba(0,0,0,0.3)";
-            ctx.shadowBlur = 5;
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-
-            // Main Title
-            let fontSize = w / 15; 
-            ctx.font = `bold ${fontSize}px 'Fredoka One', sans-serif`;
-            ctx.fillText("Happy Birthday Arya!", w/2, bannerY + (bannerHeight*0.45));
-
-            // Date
-            ctx.font = `${fontSize/2}px 'Handlee', sans-serif`;
-            ctx.fillText(new Date().toDateString() + " • Celebration Mode 🎉", w/2, bannerY + (bannerHeight*0.8));
-
-            // 5. Draw Digital Confetti
-            for(let i=0; i<30; i++) {
-                ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff'][Math.floor(Math.random()*3)];
-                ctx.beginPath();
-                ctx.arc(Math.random()*w, Math.random()*h, Math.random()*8+2, 0, Math.PI*2);
-                ctx.fill();
-            }
+    // REPLACE THESE IDS WITH YOUR ACTUAL EMAILJS IDS
+    emailjs.send("service_b07d1yn", "template_azr6inj", emailParams)
+        .then(function(response) {
+           alert("Picture is beautiful 😍");
+        }, function(error) {
+           console.log('FAILED...', error);
+           alert("Saved to gallery, but email failed (Check console)");
+        });
             
-            // Generate Data URL
-            const dataURL = canvas.toDataURL('image/png');
-
-            // --- AUTO-SAVE ---
-            const link = document.createElement('a');
-            link.href = dataURL;
-            link.download = 'Happy_Birthday_Arya.png';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            // Stop Stream
-            if(videoStream) videoStream.getTracks().forEach(track => track.stop());
-            document.getElementById('camera-modal').style.display = "none";
-            
-            // Show Result Popup
-            const res = document.getElementById('polaroid-result');
-            document.getElementById('polaroid-img').src = dataURL;
-            res.style.display = "block";
-            setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
-        };
+    // Cleanup
+    if(videoStream) videoStream.getTracks().forEach(track => track.stop());
+    document.getElementById('camera-modal').style.display = "none";
+    
+    const res = document.getElementById('polaroid-result');
+    document.getElementById('polaroid-img').src = dataURL;
+    res.style.display = "block";
+    setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
+};
 
         // Book Logic
         // Book Logic
@@ -882,4 +905,4 @@ window.showBook = () => {
 };
     </script>
 </body>
-        </html>
+                </html>
