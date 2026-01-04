@@ -232,17 +232,73 @@
             background: white; border: 5px solid #ddd; cursor: pointer;
         }
         
-        /* Drawing Modal */
+        /* --- ADVANCED DRAWING MODAL --- */
         #drawing-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fffdf0; z-index: 305; display: none; 
+            background: #f0f0f0; z-index: 305; display: none; 
             flex-direction: column; align-items: center; justify-content: center;
         }
-        #draw-canvas {
-            border: 2px solid #333; background: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            touch-action: none;
+        
+        #canvas-wrapper {
+            width: 95vw; height: 85vh;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
         }
+
+        #draw-canvas {
+            width: 100%; height: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        /* FLOATING TOOLBAR */
+        .toolbar-container {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            z-index: 310;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toggle-btn {
+            background: #ff6f61; color: white; border: none;
+            width: 50px; height: 30px;
+            border-radius: 15px 15px 0 0;
+            font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tools-panel {
+            background: white; width: 100%; max-width: 600px;
+            padding: 15px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; gap: 10px;
+            transform-origin: bottom;
+        }
+        
+        /* Tool Rows */
+        .tool-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; overflow-x: auto; padding-bottom: 5px;}
+        
+        /* Brushes */
+        .brush-btn {
+            padding: 8px 12px; border: 1px solid #ddd; background: #f9f9f9;
+            border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+        }
+        .brush-btn.active { background: #74b9ff; color: white; border-color: #0984e3; }
+
+        /* Colors */
+        .color-opt { width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; flex-shrink: 0;}
+        .color-opt.active { transform: scale(1.2); border: 2px solid #333; }
+        
+        /* Slider */
+        input[type=range] { width: 100px; }
+        
+        /* Action Buttons */
+        .action-btn { padding: 8px 15px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; color: white; }
         .tool-bar { margin-bottom: 10px; display: flex; gap: 10px; }
         .color-btn { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid #ccc; }
         
@@ -402,19 +458,50 @@
         <div style="color: white; margin-top: 10px;">Say Cheese! 🧀</div>
     </div>
 
-    <!-- DRAWING MODAL -->
+<!-- ADVANCED DRAWING MODAL -->
     <div id="drawing-modal">
-        <div class="tool-bar">
-            <div class="color-btn" style="background:black;" onclick="setColor('black')"></div>
-            <div class="color-btn" style="background:red;" onclick="setColor('red')"></div>
-            <div class="color-btn" style="background:blue;" onclick="setColor('blue')"></div>
-            <div class="color-btn" style="background:green;" onclick="setColor('green')"></div>
-            <div class="color-btn" style="background:orange;" onclick="setColor('orange')"></div>
+        <!-- Canvas Area -->
+        <div id="canvas-wrapper">
+            <canvas id="draw-canvas"></canvas>
         </div>
-        <canvas id="draw-canvas"></canvas>
-        <div style="margin-top:20px;">
-            <button style="padding:10px 20px; background:#00b894; color:white; border:none; border-radius:5px;" onclick="saveDrawing()">Save Art 💾</button>
-            <button style="padding:10px 20px; background:#d63031; color:white; border:none; border-radius:5px;" onclick="closeDrawing()">Close</button>
+
+        <!-- Floating Toolbar -->
+        <div class="toolbar-container" id="main-toolbar" style="transform: translateY(0);">
+            <!-- Toggle Button (Arrow Up/Down logic handled in JS) -->
+            <button class="toggle-btn" onclick="toggleToolbar()">🔽</button>
+            
+            <div class="tools-panel">
+                <!-- Row 1: Brushes & Grid -->
+                <div class="tool-row">
+                    <button class="brush-btn active" onclick="setTool('pen', this)">🖊️ Pen</button>
+                    <button class="brush-btn" onclick="setTool('pencil', this)">✏️ Pencil</button>
+                    <button class="brush-btn" onclick="setTool('marker', this)">🖍️ Marker</button>
+                    <button class="brush-btn" onclick="setTool('eraser', this)">🧼 Eraser</button>
+                    <button class="brush-btn" style="background:#ffeaa7;" onclick="drawGrid()">▦ Grid</button>
+                </div>
+
+                <!-- Row 2: Size & Colors -->
+                <div class="tool-row">
+                    <span style="font-size:0.8rem;">Size:</span>
+                    <input type="range" min="1" max="30" value="5" id="brush-size" oninput="updateSize(this.value)">
+                    
+                    <!-- Colors -->
+                    <div class="color-opt" style="background:black;" onclick="setColor('black', this)"></div>
+                    <div class="color-opt" style="background:red;" onclick="setColor('red', this)"></div>
+                    <div class="color-opt" style="background:blue;" onclick="setColor('blue', this)"></div>
+                    <div class="color-opt" style="background:green;" onclick="setColor('green', this)"></div>
+                    
+                    <!-- Custom Color Picker -->
+                    <input type="color" id="custom-color" value="#ff00ff" onchange="setColor(this.value, this)" style="width:35px; height:35px; border:none; background:none;">
+                </div>
+
+                <!-- Row 3: Actions -->
+                <div class="tool-row" style="justify-content: center; margin-top:5px;">
+                    <button class="action-btn" style="background:#00b894; width:100%;" onclick="saveDrawing()">Save Masterpiece 💾</button>
+                    <button class="action-btn" style="background:#d63031;" onclick="clearCanvas()">Clear</button>
+                    <button class="action-btn" style="background:#636e72;" onclick="closeDrawing()">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -722,28 +809,37 @@ window.exitApp = () => {
             draw();
         };
 
-        // --- DRAWING LOGIC ---
+ // --- ADVANCED DRAWING LOGIC ---
         let isDrawing = false;
         let dCtx;
+        let canvas, wrapper;
+        let currentTool = 'pen';
+        let currentColor = 'black';
+        let currentSize = 5;
+        let isToolbarOpen = true;
+
         window.openDrawing = (e) => {
             e.stopPropagation();
             const modal = document.getElementById('drawing-modal');
-            const canvas = document.getElementById('draw-canvas');
+            canvas = document.getElementById('draw-canvas');
+            wrapper = document.getElementById('canvas-wrapper');
+            
             modal.style.display = 'flex';
-            canvas.width = window.innerWidth * 0.9;
-            canvas.height = window.innerHeight * 0.6;
+            
+            // Set resolution based on wrapper size (High res)
+            canvas.width = wrapper.clientWidth;
+            canvas.height = wrapper.clientHeight;
+            
             dCtx = canvas.getContext('2d');
             
-            // FILL WHITE BACKGROUND
+            // Fill White Background initially
             dCtx.fillStyle = "white";
             dCtx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Styles
-            dCtx.lineWidth = 5;
-            dCtx.lineCap = 'round';
-            dCtx.strokeStyle = 'black';
+            // Default Settings
+            setupContext();
             
-            // Events
+            // Event Listeners
             const startD = (ev) => { isDrawing=true; drawMove(ev); };
             const endD = () => { isDrawing=false; dCtx.beginPath(); };
             const drawMove = (ev) => {
@@ -752,6 +848,7 @@ window.exitApp = () => {
                 const rect = canvas.getBoundingClientRect();
                 const x = (ev.clientX || ev.touches[0].clientX) - rect.left;
                 const y = (ev.clientY || ev.touches[0].clientY) - rect.top;
+                
                 dCtx.lineTo(x, y);
                 dCtx.stroke();
                 dCtx.beginPath();
@@ -762,21 +859,107 @@ window.exitApp = () => {
             canvas.addEventListener('mousemove', drawMove); canvas.addEventListener('touchmove', drawMove);
             canvas.addEventListener('mouseup', endD); canvas.addEventListener('touchend', endD);
         }
-        
-        window.setColor = (c) => { if(dCtx) dCtx.strokeStyle = c; }
-        window.closeDrawing = () => { document.getElementById('drawing-modal').style.display='none'; }
-        
+
+        // Apply Brush Styles
+        function setupContext() {
+            dCtx.lineWidth = currentSize;
+            dCtx.strokeStyle = currentColor;
+            dCtx.lineCap = 'round';
+            dCtx.lineJoin = 'round';
+            
+            // Tool Specifics
+            if(currentTool === 'pencil') {
+                dCtx.globalAlpha = 0.6; // Light sketch look
+                dCtx.lineWidth = Math.max(1, currentSize / 2);
+            } else if(currentTool === 'marker') {
+                dCtx.globalAlpha = 0.4; // Highlighter look
+                dCtx.lineWidth = currentSize * 2;
+                dCtx.lineCap = 'square';
+            } else if(currentTool === 'eraser') {
+                dCtx.globalAlpha = 1.0;
+                dCtx.strokeStyle = 'white';
+            } else {
+                // Pen (Default)
+                dCtx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- TOOLBAR FUNCTIONS ---
+        window.toggleToolbar = () => {
+            const bar = document.getElementById('main-toolbar');
+            const btn = document.querySelector('.toggle-btn');
+            if(isToolbarOpen) {
+                bar.style.transform = "translateY(90%)"; // Hide most of it
+                btn.innerText = "🔼";
+            } else {
+                bar.style.transform = "translateY(0)";
+                btn.innerText = "🔽";
+            }
+            isToolbarOpen = !isToolbarOpen;
+        };
+
+        window.setTool = (tool, btn) => {
+            currentTool = tool;
+            setupContext();
+            // Update UI
+            document.querySelectorAll('.brush-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+
+        window.setColor = (color, btn) => {
+            if(currentTool === 'eraser') currentTool = 'pen'; // Switch back to pen if picking color
+            currentColor = color;
+            setupContext();
+            // Update UI
+            document.querySelectorAll('.color-opt').forEach(b => b.style.transform = "scale(1)");
+            if(btn && btn.classList.contains('color-opt')) btn.style.transform = "scale(1.2)";
+        };
+
+        window.updateSize = (val) => {
+            currentSize = val;
+            setupContext();
+        };
+
+        window.drawGrid = () => {
+            if(!dCtx) return;
+            // Draw grid lines over canvas
+            dCtx.save();
+            dCtx.strokeStyle = "#ddd";
+            dCtx.lineWidth = 1;
+            dCtx.globalAlpha = 1;
+            dCtx.beginPath();
+            
+            // Vertical lines
+            for(let x = 0; x <= canvas.width; x += 30) {
+                dCtx.moveTo(x, 0); dCtx.lineTo(x, canvas.height);
+            }
+            // Horizontal lines
+            for(let y = 0; y <= canvas.height; y += 30) {
+                dCtx.moveTo(0, y); dCtx.lineTo(canvas.width, y);
+            }
+            dCtx.stroke();
+            dCtx.restore();
+            // Restore previous brush settings
+            setupContext();
+        };
+
+        window.clearCanvas = () => {
+            dCtx.fillStyle = "white";
+            dCtx.fillRect(0, 0, canvas.width, canvas.height);
+        };
+
+        window.closeDrawing = () => { document.getElementById('drawing-modal').style.display='none'; };
+
         window.saveDrawing = () => {
-            const canvas = document.getElementById('draw-canvas');
             const data = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.href = data;
-            link.download = 'Arya_Art.png';
+            link.download = 'Arya_Masterpiece.png';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            alert("Artwork Saved to Gallery!");
-        }
+            alert("Artwork Saved to Gallery! 🎨");
+        };
 
         // Camera Logic
         let videoStream;
