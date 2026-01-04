@@ -846,11 +846,11 @@ window.exitApp = () => {
     // Text resizing based on width
     let titleSize = w / 15; 
     ctx.font = `bold ${titleSize}px 'Fredoka One', sans-serif`;
-    ctx.fillText("Happy Birthday Arya! 🎉", w/2, bannerY + (bannerHeight*0.45));
+    ctx.fillText("Happy Birthday! 🎉", w/2, bannerY + (bannerHeight*0.45));
 
     let dateSize = titleSize / 2.2;
     ctx.font = `${dateSize}px 'Handlee', sans-serif`;
-    ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bannerY + (bannerHeight*0.8));
+    ctx.fillText(new Date().toDateString() + " • Smily moments ✨", w/2, bannerY + (bannerHeight*0.8));
 
     // 5. Add Digital Confetti Overlay
     for(let i=0; i<40; i++) {
